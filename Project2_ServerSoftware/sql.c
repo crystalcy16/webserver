@@ -4,9 +4,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h> 
+#include <ctype.h>
 
 #define MAXBUF (8192)
 #define BLOCK_SIZE (256)
+#define MAXCOLS 16
+
 
 
 // headers
@@ -16,9 +19,15 @@ char* table_schema(char* table_name);
 char* data_string(char* schema, char* value_string);
 
 
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
+char* select_tablename(char* cmd);
+char*strfind( char *full,  char *word);
+char** select_colnames(char *cmd);
+char** select_conditional(char *cmd);
+
+
+
+
+
 
 
 
@@ -45,13 +54,33 @@ int main(int argc, char *argv[]) {
     content_length += snprintf(content + content_length, MAXBUF - content_length, "<p>%s</p>\r\n", query);
 
     //print out if call_query works
-    char *n = table_schema("movies");
+    //char *n = table_schema("movies");
     //note  Lyle, Lyle, Crocodile may not work well due to commas
-    char *v = strdup("2, 'Lyle, Lyle, Crocodile', 100");
-    char *query_response = data_string(n, v);
+    //char *v = strdup("2, 'Lyle, Lyle, Crocodile', 100");
+    //char *query_response = data_string(n, v);
+    //char *v = strdup("SELECT CustomerName, City FROM Customers WHERE City = 1;");
+    //char **query_response = select_colnames(v);
     //content_length += snprintf(content + content_length, MAXBUF - content_length, "<p>%s</p>\r\n", n);
     //content_length += snprintf(content + content_length, MAXBUF - content_length, "<p>%s</p>\r\n", v);
-    content_length += snprintf(content + content_length, MAXBUF - content_length, "<pre>%s</pre>\r\n", query_response);
+    //content_length += snprintf(content + content_length, MAXBUF - content_length, "<pre>%s</pre>\r\n", query_response);
+
+    //onluy for char** function testings
+char *v = strdup("SELECT CustomerName, City FROM Customers WHERE City >= 1;");
+char **query_response = select_conditional(v);
+
+if (query_response == NULL || query_response[0] == NULL) {
+    content_length += snprintf(content + content_length, MAXBUF - content_length,
+        "<p style='color:red;'>Could not parse column names</p>\r\n");
+} else {
+    for (int i = 0; query_response[i]; i++) {
+        content_length += snprintf(content + content_length, MAXBUF - content_length,
+            "<p>col[%d]: %s</p>\r\n", i, query_response[i]);
+        free(query_response[i]); 
+    }
+}
+
+
+
 
 
     free(v);
@@ -273,7 +302,7 @@ char* table_schema(char* table_name) {
 
 
 // parse the schema for size of padding needed (insert) 
-// pars schma and rturn propr data string 
+// parse schma and return proper data string 
 //to get size, simply do siz of rturnd char*
 
 //value_string is just string of values (not yet in list format)
@@ -370,7 +399,161 @@ char* data_string(char* schema, char* value_string) {
     return result;
 }
 
-//update
+//find word ie: substring matcher
+char* strfind( char *full,  char *word) {
+    size_t len = strlen(word);
+    for (; *full; full++) {
+        if (strncasecmp(full, word, len) == 0)
+            return (char *)full;
+    }
+    return NULL;
+}
 
+//table name as char*
+char* select_tablename(char* cmd) {
+    static char name[128];
+    name[0] = '\0';
+    
+    char *from = strfind(cmd, "FROM");
+    if (!from){
+        return NULL;
 
+    }
+    from += 4; // Move past "FROM"
 
+    //skips from
+    while (isspace(*from)){
+        from++;
+    }
+
+    //until space or ;
+    int i = 0;
+    while (*from && !isspace(*from) && *from != ';' && i < sizeof(name) - 1) {
+        name[i++] = *from++;
+    }
+
+    name[i] = '\0';
+    return name;
+}
+
+//grabs col name from cmd and makes a list
+char** select_colnames(char *cmd) {
+    char **col = malloc((MAXCOLS + 1) * sizeof(char*));
+    if (!col) return NULL;
+    for (int i = 0; i <= MAXCOLS; i++){
+        col[i] = NULL;
+    }
+    
+
+    //find SELECT and FROM 
+    char *select_start = strfind(cmd, "SELECT");
+    char *from_start = strfind(cmd, "FROM");
+    if (!select_start || !from_start || from_start <= select_start) return NULL;
+
+    select_start += 6; //skip SELECT
+
+    //Copy substring from SELECT and FROM
+    int len = from_start - select_start;
+
+    if (len <= 0){
+        return NULL; 
+     } //if none
+
+    char temp[256];
+    strncpy(temp, select_start, len);
+    temp[len] = '\0';
+
+    // Split columns
+    int count = 0;
+    char *token = strtok(temp, ",");
+    while (token && count < MAXCOLS) {
+        while (isspace(*token)) token++; // trim leading space
+        col[count++] = strdup(token);
+        token = strtok(NULL, ",");
+    }
+
+    col[count] = NULL;
+    return col;
+
+   
+    return NULL;  
+}
+
+//returns array of strong for where
+//ex: WHERE length >= 20
+//{length, >=, 20}
+char** select_conditional(char *cmd) {
+    static char *res[4] = {NULL, NULL, NULL, NULL};
+
+    for (int i = 0; i < 3; i++) {
+        if (res[i]) {
+            free(res[i]);
+            res[i] = NULL;
+        }
+    }
+
+    char *where = strfind(cmd, "WHERE");
+    if (!where){
+        return NULL;
+    }
+
+    where += 5;
+    while (isspace(*where)){
+        where++;
+
+    } 
+
+    //operations 
+    char *op_start = NULL;
+    char *operators[] = {"<=", ">=", "!=", "=", "<", ">", NULL};
+
+    for (int i = 0; operators[i]; i++) {
+        char *found = strstr(where, operators[i]);
+        if (found && (!op_start || found < op_start)) {
+            op_start = found;
+        }
+    }
+
+    if (!op_start){
+        return NULL;
+    }
+
+    //grabs col name
+    int col_len = op_start - where;
+    while (col_len > 0 && isspace(where[col_len - 1])) col_len--;
+
+    char col[MAXBUF];
+    strncpy(col, where, col_len);
+    col[col_len] = '\0';
+
+    //grabs operation 
+    char op[3];
+    if (strncmp(op_start, "<=", 2) == 0 || strncmp(op_start, ">=", 2) == 0 || strncmp(op_start, "!=", 2) == 0) {
+        strncpy(op, op_start, 2);
+        op[2] = '\0';
+        op_start += 2;
+    } else {
+        op[0] = *op_start;
+        op[1] = '\0';
+        op_start += 1;
+    }
+
+    //if value
+    while (isspace(*op_start)){
+        op_start++;
+
+    } 
+    int val_len = strcspn(op_start, " ;\t\r\n");
+
+    char val[MAXBUF];
+    strncpy(val, op_start, val_len);
+    val[val_len] = '\0';
+
+    
+    res[0] = strdup(col);
+    res[1] = strdup(op);
+    res[2] = strdup(val);
+    res[3] = NULL;
+
+    return res;
+}
