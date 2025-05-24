@@ -1,0 +1,1 @@
+movies|id:smallint,title:char(30),length:int;employees|employee_id:smallint,first_name:char(50),last_name:char(50);

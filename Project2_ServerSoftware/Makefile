@@ -4,7 +4,7 @@
 
 CC = gcc
 CFLAGS = -Wall
-OBJS = wserver.o wclient.o request.o io_helper.o 
+OBJS = wserver.o wclient.o request.o io_helper.o unittest
 
 .SUFFIXES: .c .o 
 
@@ -23,9 +23,16 @@ spin.cgi: spin.c
 sql.cgi: sql.c
 	$(CC) $(CFLAGS) -o sql.cgi sql.c
 
+buffer.o: buffer.c buffer.h
+	$(CC) $(CFLAGS) -c buffer.c
+
+unittest: unittest.c buffer.o
+	$(CC) $(CFLAGS) -o unittest unittest.c buffer.o
+
+
 .c.o:
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:
 	-rm -f $(OBJS) wserver wclient spin.cgi
-	-rm -f $(OBJS) wserver wclient sql.cgi
+	-rm -f $(OBJS) wserver wclient sql.cgi unittest buffer.o

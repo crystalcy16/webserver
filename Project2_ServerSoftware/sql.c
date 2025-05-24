@@ -28,10 +28,6 @@ char** select_conditional(char *cmd);
 
 
 
-
-
-
-
 int main(int argc, char *argv[]) {
     char *query;
     char content[MAXBUF];
@@ -54,18 +50,18 @@ int main(int argc, char *argv[]) {
     content_length += snprintf(content + content_length, MAXBUF - content_length, "<p>%s</p>\r\n", query);
 
     //print out if call_query works
-    //char *n = table_schema("movies");
+    char *n = table_schema("employees");
     //note  Lyle, Lyle, Crocodile may not work well due to commas
-    //char *v = strdup("2, 'Lyle, Lyle, Crocodile', 100");
-    //char *query_response = data_string(n, v);
+    char *v = strdup("2, 'Lyle, Lyle, Crocodile', 100");
+    char *query_response = data_string(n, v);
     //char *v = strdup("SELECT CustomerName, City FROM Customers WHERE City = 1;");
     //char **query_response = select_colnames(v);
-    //content_length += snprintf(content + content_length, MAXBUF - content_length, "<p>%s</p>\r\n", n);
+    content_length += snprintf(content + content_length, MAXBUF - content_length, "<pre>%s</pre>\r\n", n);
     //content_length += snprintf(content + content_length, MAXBUF - content_length, "<p>%s</p>\r\n", v);
-    //content_length += snprintf(content + content_length, MAXBUF - content_length, "<pre>%s</pre>\r\n", query_response);
+    content_length += snprintf(content + content_length, MAXBUF - content_length, "<pre>%s</pre>\r\n", query_response);
 
     //onluy for char** function testings
-char *v = strdup("SELECT CustomerName, City FROM Customers WHERE City >= 1;");
+/*char *v = strdup("SELECT CustomerName, City FROM Customers WHERE City >= 1;");
 char **query_response = select_conditional(v);
 
 if (query_response == NULL || query_response[0] == NULL) {
@@ -77,7 +73,7 @@ if (query_response == NULL || query_response[0] == NULL) {
             "<p>col[%d]: %s</p>\r\n", i, query_response[i]);
         free(query_response[i]); 
     }
-}
+}*/
 
 
 

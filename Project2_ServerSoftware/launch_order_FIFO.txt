@@ -1,0 +1,10 @@
+small1
+small2
+medium
+large
+spin2
+spin3
+spin1
+medium
+small
+spin
