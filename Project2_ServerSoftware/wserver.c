@@ -12,18 +12,20 @@ int main(int argc, char *argv[]) {
     char *root_dir = default_root;
     int port = 10000;
     
-    while ((c = getopt(argc, argv, "d:p:")) != -1)
-      switch (c) {
+    while ((c = getopt(argc, argv, "d:p:t")) != -1)
+    switch (c) {
       case 'd':
           root_dir = optarg;
           break;
       case 'p':
           port = atoi(optarg);
           break;
+      case 't':
+          break;  // Run tests and exit
       default:
-          fprintf(stderr, "usage: wserver [-d basedir] [-p port]\n");
+          fprintf(stderr, "usage: wserver [-d basedir] [-p port] [-t]\n");
           exit(1);
-      }
+  }
 
     // run out of this directory
     chdir_or_die(root_dir);
