@@ -59,6 +59,7 @@ void run_tests() {
     char *update2 = extract_update_values("UPDATE employees SET name = 'A', age = 22 WHERE name = 'A';");
     remove_spaces(update2);
     assert(strcmp(update2, "'A',22") == 0);
+    
 
     // get_entry_size unit testing
     int size1 = get_entry_size("employees|id:smallint,name:char(20),age:int;");
@@ -134,19 +135,21 @@ void run_tests() {
 
 //Testing for create table 
 void run_add_to_schema_file_tests() {
-    //const char *test_schema_path = "schema_file";
-    //remove(test_schema_path);  
+
+    const char *test_schema_path = "schema_file";
+    remove(test_schema_path);  
     const char *test_table_name = "test_table";
 
     const char *table_str = "test_table|id:smallint,name:char(10);";
     int res = add_to_schema_file(table_str);
     assert(res == 0);
-
+    
     char *schema = table_schema("test_table");
     assert(schema != NULL);
     assert(strcmp(schema, table_str) == 0);
-
+    
     remove(test_table_name);
+    remove(test_schema_path);  
     printf("add_to_schema_file and table_schema passed\n");
 }
 
@@ -179,11 +182,20 @@ void test_select() {
 }
 
 int test_main() {
+    
+    f = fopen("debug.log", "a+");  
+    if (f == NULL) {
+        perror("Error with logging file");
+    }
+
     run_tests();
+    
     run_add_to_schema_file_tests();
+    
     test_create();
     test_insert();
     test_select();
+    
     printf("All tests passed :) \n");
     return 0;
 }

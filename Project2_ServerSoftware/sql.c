@@ -1,16 +1,11 @@
 #include "helper.h"
 
-extern int test_main();
 
 int main(int argc, char *argv[]) {
 
     f = fopen("output.log", "a+");  
     if (f == NULL) {
         perror("Error with logging file");
-    }
-
-    if (argc == 2 && strcmp(argv[1], "-t") == 0) {
-        return test_main();  // Run your test suite and exit
     }
 
     char *query;

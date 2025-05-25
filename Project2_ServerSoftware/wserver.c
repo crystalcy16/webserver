@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include "request.h"
 #include "io_helper.h"
+#include "helper_testing.h"
 
 char default_root[] = ".";
+
 
 //
 // ./wserver [-d <basedir>] [-p <portnum>] 
@@ -11,6 +13,7 @@ int main(int argc, char *argv[]) {
     int c;
     char *root_dir = default_root;
     int port = 10000;
+    int run_tests_flag = 0;
     
     while ((c = getopt(argc, argv, "d:p:t")) != -1)
     switch (c) {
@@ -21,10 +24,16 @@ int main(int argc, char *argv[]) {
           port = atoi(optarg);
           break;
       case 't':
+          run_tests_flag = 1; 
           break;  // Run tests and exit
       default:
           fprintf(stderr, "usage: wserver [-d basedir] [-p port] [-t]\n");
           exit(1);
+  }
+
+  if (run_tests_flag) {
+    test_main();
+    return 0;
   }
 
     // run out of this directory
