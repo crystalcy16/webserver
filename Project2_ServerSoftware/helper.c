@@ -66,6 +66,11 @@ char* call_query(char *statement) {
 
         //Parse the insert query to extract tablename 
         char* tablename = extract_table_name(query);
+        char* t_scheme = table_schema(tablename);
+        if (t_scheme == NULL) {
+            snprintf(response, sizeof(response), "<p>Error: Table '%s' does not exist.</p>", tablename);
+            return response;
+        }
         fprintf(f, "Tablename from query: %s \n", tablename);
         //Parse the insert query to extract values 
         char *values = extract_values_string(query);
@@ -121,9 +126,28 @@ char* call_query(char *statement) {
         char* values = extract_update_values(query);
         replace_encoded_quotes(values);
         fprintf(f, "values: %s\n", values);
+
+        //if extracted values returns error
+        if (strstr(values, "ERROR") != NULL) {
+            snprintf(response, sizeof(response), "<p>Error: Bad UPDATE syntax.</p>");
+            return response;
+        }
+
+
+
         //get the table schema 
         char* schema = table_schema(tablename);
+        if (schema == NULL) {
+            //if schema doesn't exist 
+            snprintf(response, sizeof(response), "<p>Error: Table '%s' does not exist.</p>", tablename);
+            return response;
+        }
         remove_spaces(schema);
+
+
+
+
+        
         fprintf(f, "Schema : %s\n", schema);
         char* data_string_input = data_string(schema, values);
         fprintf(f, "data string: %s\n", data_string_input);
@@ -147,6 +171,12 @@ char* call_query(char *statement) {
 
         //get tablename from querey 
         char* tablename = extract_table_name(query);
+        char* t_scheme = table_schema(tablename);
+        if (t_scheme == NULL) {
+            snprintf(response, sizeof(response), "<p>Error: Table '%s' does not exist.</p>", tablename);
+            return response;
+        }
+
         fprintf(f, "Tablename: %s\n", tablename);
 
 
@@ -159,6 +189,11 @@ char* call_query(char *statement) {
 
         //get the where conditional 
         char** conditional = select_conditional(query);
+        if (conditional == NULL) {
+            snprintf(response, sizeof(response), "<p>Error: Missing or malformed WHERE clause.</p>");
+            return response;
+        }
+
         Pair2 cond = {"0", "0"};
         if (conditional != NULL) {
             cond.name = conditional[0];
@@ -197,6 +232,11 @@ char* call_query(char *statement) {
 
         //get the table schema 
         char* schema = table_schema(tablename);
+        if (schema == NULL) {
+            //if schema doesn't exist 
+            snprintf(response, sizeof(response), "<p>Error: Table '%s' does not exist.</p>", tablename);
+            return response;
+        }
         remove_spaces(schema);
         fprintf(f, "Schema : %s\n", schema);
 
