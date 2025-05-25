@@ -10,7 +10,7 @@ echo "Server starts"
 $SERVER -d $ROOT -p $PORT &
 SERVER_PID=$!
 
-#wait for server to be ready -> scripts are super fast
+#server to start
 sleep 1
 
 echo " "
@@ -40,12 +40,12 @@ echo "Test 6: SELECT FROM [non-existent table] => SELECT * FROM womp"
 curl "$BASE_URL?query=SELECT%20*%20FROM%20womp"
 echo -e "\n---\n"
 
-echo "Test 7: UPDATE employees => UPDATE employees SET first_name = 'Amazon', last_name = 'Thanks' WHERE employee_id = 1"
-curl "$BASE_URL?query=UPDATE%20employees%20SET%20first_name%20=%20%27Alicia%27,%20last_name%20=%20%27Smythe%27%20WHERE%20employee_id%20=%201"
+echo "Test 7: SELECT FROM employees => SELECT employee_id, first_name FROM employees WHERE employee_id = 0001"
+curl "$BASE_URL?query=SELECT%20employee_id,%20first_name%20FROM%20employees%20WHERE%20employee_id%20=%201"
 echo -e "\n---\n"
 
-echo "Test 8: SELECT after UPDATE => SELECT * FROM employees WHERE employee_id = 1"
-curl "$BASE_URL?query=SELECT%20employee_id,%20first_name,%20last_name%20FROM%20employees%20WHERE%20employee_id%20=%201"
+echo "Test 8: UPDATE employees => UPDATE employees SET first_name = 'Amazon', last_name = 'Thanks' WHERE employee_id = 1"
+curl "$BASE_URL?query=UPDATE%20employees%20SET%20first_name%20=%20%27Alicia%27,%20last_name%20=%20%27Smythe%27%20WHERE%20employee_id%20=%201"
 echo -e "\n---\n"
 
 echo "Test 9: DELETE FROM employees => DELETE FROM employees WHERE employee_id = 1"
